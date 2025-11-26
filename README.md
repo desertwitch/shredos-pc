@@ -6,18 +6,20 @@ It also serves as a base for development and contributions to upstream ShredOS i
 
 It utilizes the forked `nwipe-pc` under the hood: https://github.com/desertwitch/nwipe-pc
 
-For the Unraid-specific releases of this fork, visit the `Releases` section of
-this repository (which can be found to the right or in the tabs menu bar above).
+**For the Unraid-specific releases of this fork, visit the [`Releases`](https://github.com/desertwitch/shredos-pc/releases) section of
+this repository** (which can be found to the right or in the tabs menu bar above).
 IMG files can be flashed to USB, and ISO files both to USB and CD/DVD-ROM. IMG
 files should be used when wanting to customize ShredOS (`autonuke` setups,
 specific kernel parameters, ...) or otherwise needing the PDF reports generated
 by ShredOS.
 
-**You should use upstream ShredOS unless depending on Unraid-specific features.**
+<a href="https://github.com/desertwitch/shredos-pc/releases"><img width="250" height="100" alt="Download here" src="https://github.com/user-attachments/assets/e37437b8-97b8-4925-b3b7-1420e7432659" /></a>
 
 Beware that below README may be behind/ahead of the upstream ShredOS project,
 and while contained information will be relevant for this fork, all contained
 links will point only to the upstream ShredOS project.
+
+**You should use upstream ShredOS unless depending on Unraid-specific features.**
 
 # ShredOS - Disk Eraser
 
