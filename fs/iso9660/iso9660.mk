@@ -44,11 +44,9 @@ ROOTFS_ISO9660_HYBRID_APPEND_PARTITION_TYPE = $(call qstrip,$(BR2_TARGET_ROOTFS_
 
 ifeq ($(BR2_ARCH_IS_64),y)
 ROOTFS_ISO9660_EFI_NAME = bootx64.efi
-ROOTFS_ISO9660_EFI_NOTNAME = bootia32.efi
 ROOTFS_ISO9660_GRUB2_EFI_PREFIX = $(call qstrip,$(GRUB2_PREFIX_x86_64-efi))
 else
 ROOTFS_ISO9660_EFI_NAME = bootia32.efi
-ROOTFS_ISO9660_EFI_NOTNAME = bootx64.efi
 ROOTFS_ISO9660_GRUB2_EFI_PREFIX = $(call qstrip,$(GRUB2_PREFIX_i386-efi))
 endif
 
@@ -95,9 +93,15 @@ else
 ROOTFS_ISO9660_TMP_TARGET_DIR = $(TARGET_DIR)
 endif
 
+################################################################################
+# Memtest
+################################################################################
+
 define ROOTFS_ISO9660_COPY_MEMTEST_BINARIES
-	$(INSTALL) -D -m 0644 $(BINARIES_DIR)/memtest.efi $(ROOTFS_ISO9660_TMP_TARGET_DIR)/EFI/BOOT/memtest.efi
-	$(INSTALL) -D -m 0644 $(BINARIES_DIR)/memtest.bin $(ROOTFS_ISO9660_TMP_TARGET_DIR)/boot/memtest
+	$(INSTALL) -D -m 0644 $(BINARIES_DIR)/memtest.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/memtest.efi
+	$(INSTALL) -D -m 0644 $(BINARIES_DIR)/memtest.bin \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/boot/memtest
 endef
 
 ################################################################################
@@ -145,28 +149,34 @@ ROOTFS_ISO9660_EFI_PARTITION_CONTENT = $(BINARIES_DIR)/efi-part
 ROOTFS_ISO9660_GRUB2_CONFIG_PATH = $(ROOTFS_ISO9660_TMP_TARGET_DIR)/boot/grub/grub.cfg
 ROOTFS_ISO9660_GRUB2_EFI_CONFIG_PATH = $(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/grub.cfg
 
+ifeq ($(BR2_ARCH_IS_64),y)
+# Backup 64-bit bootloader for use with future 32-bit builds
+define ROOTFS_ISO9660_BACKUP_X64_EFI
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
+		$(TOPDIR)/board/shredos/bootx64.efi
+endef
+else
+# We are building for 32-bit, but also add the 64-bit bootloader
+define ROOTFS_ISO9660_RESTORE_X64_EFI
+	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootx64.efi \
+		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
+endef
+endif
+
 define ROOTFS_ISO9660_INSTALL_GRUB2_EFI
-	# If 32bit build also copy the bootx64.efi from board/shredos/ so 32bit shredos will boot on a 64 EFI system
-	if [ "$(BR2_i386)" = "y" ]; then \
-		$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootx64.efi $(BINARIES_DIR)/efi-part/EFI/BOOT/bootx64.efi; \
-	fi
+	# Install memtest binaries to ISO9660 filesystem
+	$(ROOTFS_ISO9660_COPY_MEMTEST_BINARIES)
+	# Either backup or restore the 64-bit bootloader
+	$(ROOTFS_ISO9660_BACKUP_X64_EFI)
+	$(ROOTFS_ISO9660_RESTORE_X64_EFI)
 	# Create file to better find ISO9660 filesystem
 	$(INSTALL) -D -m 0644 /dev/null \
 		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_IDENT_FILE)
 	# Copy EFI bootloader also to ISO9660 filesystem
 	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NAME) \
 		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NAME)
-	# If 32 bit build we also want the 64 bit EFI installed
-	if [ "$(BR2_i386)" = "y" ]; then \
-		$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NOTNAME) \
-		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NOTNAME)
-	fi
-	# If 64bit build copy the bootx64.efi to board/shredos/ as this will be used when building 32bit build
-	if [ "$(BR2_x86_64)" = "y" ]; then \
-		$(INSTALL) -D -m 0644 $(BINARIES_DIR)/efi-part/EFI/BOOT/bootx64.efi $(TOPDIR)/board/shredos/bootx64.efi; \
-	fi
-	# Copy memtest.efi and memtest.bin to ISO9660 filesystem
-	$(ROOTFS_ISO9660_COPY_MEMTEST_BINARIES)
 	# Create EFI FAT partition
 	$(RM) -rf $(ROOTFS_ISO9660_EFI_PARTITION_PATH)
 	mkdir -p $(dir $(ROOTFS_ISO9660_EFI_PARTITION_PATH))
@@ -264,28 +274,34 @@ define ROOTFS_ISO9660_INSTALL_ISOLINUX_CONFIG
 		$(ROOTFS_ISO9660_ISOLINUX_CONFIG_PATH)
 endef
 
+ifeq ($(BR2_ARCH_IS_64),y)
+# Backup 64-bit bootloader for use with future 32-bit builds
+define ROOTFS_ISO9660_BACKUP_X64_EFI
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
+		$(TOPDIR)/board/shredos/bootx64.efi
+endef
+else
+# We are building for 32-bit, but also add the 64-bit bootloader
+define ROOTFS_ISO9660_RESTORE_X64_EFI
+	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootx64.efi \
+		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
+endef
+endif
+
 define ROOTFS_ISO9660_INSTALL_GRUB2_EFI
-	# If 32bit build also copy the bootx64.efi from board/shredos/ so 32bit shredos will boot on a 64 EFI system
-	if [ "$(BR2_i386)" = "y" ]; then \
-		$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootx64.efi $(BINARIES_DIR)/efi-part/EFI/BOOT/bootx64.efi; \
-	fi
+	# Install memtest binaries to ISO9660 filesystem
+	$(ROOTFS_ISO9660_COPY_MEMTEST_BINARIES)
+	# Either backup or restore the 64-bit bootloader
+	$(ROOTFS_ISO9660_BACKUP_X64_EFI)
+	$(ROOTFS_ISO9660_RESTORE_X64_EFI)
 	# Create file to better find ISO9660 filesystem
 	$(INSTALL) -D -m 0644 /dev/null \
 		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_IDENT_FILE)
 	# Copy EFI bootloader also to ISO9660 filesystem
 	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NAME) \
 		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NAME)
-	# If 32 bit build we also want the 64 bit EFI installed
-	if [ "$(BR2_i386)" = "y" ]; then \
-		$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NOTNAME) \
-		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NOTNAME)
-	fi
-	# If 64bit build copy the bootx64.efi to board/shredos/ as this will be used when building 32bit build
-	if [ "$(BR2_x86_64)" = "y" ]; then \
-		$(INSTALL) -D -m 0644 $(BINARIES_DIR)/efi-part/EFI/BOOT/bootx64.efi $(TOPDIR)/board/shredos/bootx64.efi; \
-	fi
-	# Copy memtest.efi and memtest.bin to ISO9660 filesystem
-	$(ROOTFS_ISO9660_COPY_MEMTEST_BINARIES)
 	# Create EFI FAT partition
 	$(RM) -rf $(ROOTFS_ISO9660_EFI_PARTITION_PATH)
 	mkdir -p $(dir $(ROOTFS_ISO9660_EFI_PARTITION_PATH))
