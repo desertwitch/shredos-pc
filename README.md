@@ -830,18 +830,13 @@ $ dd if=shredos-20200412.img of=/dev/sdx (20200412 will be the day you compiled,
 #### The following configurations are available to build different targets:
 
 - `make shredos_defconfig` - build USB image and hybrid ISO (64-bit)
-- `make shredos_i586_defconfig` - build USB image and hybrid ISO (32-bit)
-- `make shredos_img_defconfig` - build USB image only (64-bit)
-- `make shredos_img_i586_defconfig` - build USB image only (32-bit)
-- `make shredos_iso_defconfig` - build hybrid ISO only (64-bit)
-- `make shredos_iso_i586_defconfig` - build hybrid ISO only (32-bit)
-- `make shredos_iso_legacy_defconfig` - build legacy ISO only (64-bit)
-- `make shredos_iso_legacy_i586_defconfig` - build legacy ISO only (32-bit)
+- `make shredos_lite_defconfig` - build lighter USB image and hybrid ISO (64-bit)
+- `make shredos_i686_lite_defconfig` - build lighter USB image and hybrid ISO (32-bit)
 
 #### The following experimental configurations are available for testing:
 
 - `make shredos_iso_extra_defconfig` - build hybrid ISO with appended writeable partition (64-bit)
-- `make shredos_iso_extra_i586_defconfig` - build hybrid ISO with appended writeable partition (32-bit)
+- `make shredos_iso_extra_i686_lite_defconfig` - build lighter hybrid ISO with appended writeable partition (32-bit)
 
 Do note that loading a configuration should typically be the last step before `make`.
 
@@ -856,8 +851,6 @@ Do note that loading a configuration should typically be the last step before `m
 > partition at burn-time, which then also allows customization of the GRUB
 > configuration.
 >
->The **extra** ISOs (experimental) have an "extra" write partition appended.  
->The **legacy** ISOs work in BIOS and UEFI, but only as burned to CD/DVD-ROM.
 
 #### Building multiple configurations:
 
