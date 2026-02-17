@@ -51,8 +51,6 @@ NWIPE_PRE_CONFIGURE_HOOKS += NWIPE_UPDATE_VERSION_TXT
 # Version architecture nwipe banner updater (pre-build)
 ################################################################################
 
-# This hook copies your patch script (banner patch) into the source directory
-# and runs autogen.sh before the actual configure/make starts.
 define NWIPE_INITSH
 	@echo "Updating version.txt and nwipe banner with architecture: $(BR2_ARCH)"
 
@@ -76,7 +74,5 @@ endef
 # autogen files (which should not be there).
 NWIPE_PRE_CONFIGURE_HOOKS += NWIPE_INITSH
 
-# Include the Buildroot autotools package framework,
-# which takes care of configure/make/make install.
 $(eval $(autotools-package))
 
