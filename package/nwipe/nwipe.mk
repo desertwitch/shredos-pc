@@ -4,8 +4,6 @@
 #
 ################################################################################
 
-SHREDOS_VERSION_FILE = board/shredos/fsoverlay/etc/shredos/version.txt
-
 NWIPE_VERSION = $(call qstrip,$(BR2_PACKAGE_NWIPE_GIT_REVISION))
 NWIPE_DEPENDENCIES = ncurses parted dmidecode coreutils libconfig
 NWIPE_SITE_METHOD = git
