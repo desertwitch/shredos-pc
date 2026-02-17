@@ -5,9 +5,9 @@ if grep -Eq "^BR2_ARCH_IS_64=y$" "${BR2_CONFIG}"; then
     MKIMAGE_EFI=bootx64.efi
     MKIMAGE_CFG=genimage.cfg
 else
-    MKIMAGE_ARCH=i586
+    MKIMAGE_ARCH=i686
     MKIMAGE_EFI=bootia32.efi
-    MKIMAGE_CFG=genimage_i586.cfg
+    MKIMAGE_CFG=genimage_i686.cfg
 fi
 
 version=$(cat board/shredos/fsoverlay/etc/shredos/version.txt)
