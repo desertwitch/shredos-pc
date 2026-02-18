@@ -1,12 +1,10 @@
 #!/bin/bash -e
 
 if grep -Eq "^BR2_ARCH_IS_64=y$" "${BR2_CONFIG}"; then
-    MKIMAGE_ARCH=x86_64
-    MKIMAGE_EFI=bootx64.efi
+    MKIMAGE_ARCH=x86-64
     MKIMAGE_CFG=genimage.cfg
 else
     MKIMAGE_ARCH=i686
-    MKIMAGE_EFI=bootia32.efi
     MKIMAGE_CFG=genimage_i686.cfg
 fi
 
@@ -14,7 +12,7 @@ version=$(cat board/shredos/fsoverlay/etc/shredos/version.txt)
 
 cp "board/shredos/grub.cfg"                            "${BINARIES_DIR}/grub.cfg"         || exit 1
 cp "output/target/lib/grub/i386-pc/boot.img"           "${BINARIES_DIR}/boot.img"         || exit 1
-cp "${BINARIES_DIR}/efi-part/EFI/BOOT/${MKIMAGE_EFI}"  "${BINARIES_DIR}/${MKIMAGE_EFI}"   || exit 1
+cp "${BINARIES_DIR}/efi-part/EFI/BOOT/bootia32.efi"    "${BINARIES_DIR}/bootia32.efi"     || exit 1
 cp "${BINARIES_DIR}/efi-part/EFI/BOOT/bootx64.efi"     "${BINARIES_DIR}/bootx64.efi"      || exit 1
 
 cp "board/shredos/autorun.inf"             "${BINARIES_DIR}/autorun.inf"                  || exit 1

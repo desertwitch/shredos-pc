@@ -42,7 +42,8 @@ X32_CONFIGS=(
 # Packages always needing rebuild between runs, even for the same architecture.
 # This only applies when QUICK_BUILD is enabled, otherwise rebuilds everything.
 ALWAYS_REBUILD_PKGS=(
-	"grub2"
+	"nwipe" # For specific version/banner patching
+	"grub2" # For specific bootloader generation
 )
 
 ################################################################################

@@ -150,14 +150,20 @@ ROOTFS_ISO9660_GRUB2_CONFIG_PATH = $(ROOTFS_ISO9660_TMP_TARGET_DIR)/boot/grub/gr
 ROOTFS_ISO9660_GRUB2_EFI_CONFIG_PATH = $(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/grub.cfg
 
 ifeq ($(BR2_ARCH_IS_64),y)
-# Backup 64-bit bootloader for use with future 32-bit builds
-define ROOTFS_ISO9660_BACKUP_RESTORE_X64_EFI
+# Include also the 32-bit bootloader for 64-bit builds
+define ROOTFS_ISO9660_EFI_OTHER_ARCH
 	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
 		$(TOPDIR)/board/shredos/bootx64.efi
+	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootia32.efi \
+		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi
 endef
 else
-# We are building for 32-bit, but also add the 64-bit bootloader
-define ROOTFS_ISO9660_BACKUP_RESTORE_X64_EFI
+# Include also the 64-bit bootloader for 32-bit builds
+define ROOTFS_ISO9660_EFI_OTHER_ARCH
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi \
+		$(TOPDIR)/board/shredos/bootia32.efi
 	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootx64.efi \
 		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
 	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
@@ -168,8 +174,8 @@ endif
 define ROOTFS_ISO9660_INSTALL_GRUB2_EFI
 	# Install memtest binaries to ISO9660 filesystem
 	$(ROOTFS_ISO9660_COPY_MEMTEST_BINARIES)
-	# Either backup or restore the 64-bit bootloader
-	$(ROOTFS_ISO9660_BACKUP_RESTORE_X64_EFI)
+	# Include also the other achitecture bootloader
+	$(ROOTFS_ISO9660_EFI_OTHER_ARCH)
 	# Create file to better find ISO9660 filesystem
 	$(INSTALL) -D -m 0644 /dev/null \
 		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_IDENT_FILE)
@@ -274,14 +280,20 @@ define ROOTFS_ISO9660_INSTALL_ISOLINUX_CONFIG
 endef
 
 ifeq ($(BR2_ARCH_IS_64),y)
-# Backup 64-bit bootloader for use with future 32-bit builds
-define ROOTFS_ISO9660_BACKUP_RESTORE_X64_EFI
+# Include also the 32-bit bootloader for 64-bit builds
+define ROOTFS_ISO9660_EFI_OTHER_ARCH
 	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
 		$(TOPDIR)/board/shredos/bootx64.efi
+	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootia32.efi \
+		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi
 endef
 else
-# We are building for 32-bit, but also add the 64-bit bootloader
-define ROOTFS_ISO9660_BACKUP_RESTORE_X64_EFI
+# Include also the 64-bit bootloader for 32-bit builds
+define ROOTFS_ISO9660_EFI_OTHER_ARCH
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi \
+		$(TOPDIR)/board/shredos/bootia32.efi
 	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootx64.efi \
 		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
 	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
@@ -292,8 +304,8 @@ endif
 define ROOTFS_ISO9660_INSTALL_GRUB2_EFI
 	# Install memtest binaries to ISO9660 filesystem
 	$(ROOTFS_ISO9660_COPY_MEMTEST_BINARIES)
-	# Either backup or restore the 64-bit bootloader
-	$(ROOTFS_ISO9660_BACKUP_RESTORE_X64_EFI)
+	# Include also the other achitecture bootloader
+	$(ROOTFS_ISO9660_EFI_OTHER_ARCH)
 	# Create file to better find ISO9660 filesystem
 	$(INSTALL) -D -m 0644 /dev/null \
 		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_IDENT_FILE)

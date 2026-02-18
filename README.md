@@ -249,7 +249,7 @@ Create the new ShredOS .img file
 Copy shredos_with_mods.img to the root of the Ventoy USB stick and boot the Ventoy USB stick. You can confirm your changes to the kernel commmand line by booting ShredOS, switching to a virtual terminal ALT F2, and type `more /proc/cmdline`
 
 ## Virtual Terminals
-ShredOS has three tty terminals, ALT-F1 (Where nwipe is initially launched), ALT-F2 (A virtual terminal), ALT-F3 (console log, login required which is root with no password). Typical use of a virtual terminal might be to run other disk related tools such as hdparm to remove hidden sectors or hexedit to display the contents of the disk as hexadecimal values.
+ShredOS has four tty terminals, ALT-F1 (Where nwipe is initially launched), ALT-F2 (A virtual terminal), ALT-F3 (console log, login required which is root with no password), ALT-F4 ([SMART Monitoring Terminal](#smartdmt)). Typical use of a virtual terminal might be to run other disk related tools such as hdparm to remove hidden sectors or hexedit to display the contents of the disk as hexadecimal values.
 
 ## How to exclude the FAT formatted ShredOS Boot drive from Nwipe, interactive and autonuke modes
 There are two methods that can be used to exclude the FAT formatted ShredOS boot drive from appearing in nwipe's interactive mode or autonuke modes.
@@ -600,7 +600,13 @@ After running the setfont command.
 ## Included Packages
 
 #### smartmontools
-Nwipes ability to detect serial numbers on USB devices now works on USB bridges who's chipset supports that functionality. Smartmontools provides nwipe with that capability. Smartmontools can be used in the second or third virtual terminal. ALT-F2 and ALT-F3.
+Nwipes ability to detect serial numbers on USB devices now works on USB bridges who's chipset supports that functionality. Smartmontools provides nwipe with that capability. Smartmontools can be used in the second or third virtual terminal (ALT-F2 and ALT-F3).
+
+#### smartdmt
+For convenience a SMART Monitoring Terminal is available in the fourth virtual terminal (ALT-F4).
+It allows to observe all SMART information on one screen and without interacting with the command-line.
+
+![smartdmt](/images/smartdmt.gif)
 
 #### hdparm
 hdparm has many uses and is a powerfull tool. Although Nwipe will be adding ATA secure erase capability, i.e using the hard disk own firmware to initiate an erase, nwipe currently wipes drives using the traditional method of writing to every block. If you want to initiate a ATA secure erase using the drives firmware then hdparm will be of use.
