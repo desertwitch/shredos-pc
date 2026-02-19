@@ -235,7 +235,7 @@ run_cmd_tee() {
 	local timestamp
 	timestamp=$(date '+%d.%m.%Y %H:%M:%S')
 	local log_file="$1"
-
+	
 	if [ "$DRY_RUN" -eq 1 ]; then
 		echo "[DRY_RUN] tee $log_file"
 		cat
@@ -249,7 +249,7 @@ run_cmd_change_version() {
 	local timestamp
 	timestamp=$(date '+%d.%m.%Y %H:%M:%S')
 	local new_version="$1"
-
+	
 	if [ "$DRY_RUN" -eq 1 ]; then
 		echo "[DRY_RUN] echo \"$new_version\" > \"$VERSION_FILE\""
 	else
@@ -574,7 +574,7 @@ if [ "$PRE_CLEAN" -eq 1 ]; then
 	echo "==============================================="
 	echo
 	printf "%b" "$RESET"
-
+	
 	if read -rt 10; then
 		PRE_CLEAN=0
 		echo "Skipped cleaning the building stage (no 'make clean')..."
