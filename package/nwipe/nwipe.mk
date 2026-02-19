@@ -4,28 +4,75 @@
 #
 ################################################################################
 
-# Instead of v0.38, we now use the desired commit (e.g., 051e1aa)
-NWIPE_VERSION = c505c1a3a65093be629a5862ded7bf3c5506566d
-
-# Specify the Git source:
-#  - NWIPE_SITE points to the repository
-#  - NWIPE_SITE_METHOD = git ensures that Buildroot performs a Git checkout
-NWIPE_SITE = https://github.com/desertwitch/nwipe-pc.git
+NWIPE_BUILD_ARCH = $(call qstrip,$(BR2_ARCH))
+NWIPE_VERSION = $(call qstrip,$(BR2_PACKAGE_NWIPE_GIT_REVISION))
+NWIPE_DEPENDENCIES = ncurses parted dmidecode coreutils libconfig
 NWIPE_SITE_METHOD = git
 
-# Dependencies remain the same (adjust them if you need additional ones)
-NWIPE_DEPENDENCIES = ncurses parted dmidecode coreutils
+ifneq ($(call qstrip,$(BR2_PACKAGE_NWIPE_SITE)),)
+NWIPE_SITE = $(call qstrip,$(BR2_PACKAGE_NWIPE_SITE))
+else
+NWIPE_SITE = https://github.com/martijnvanbrummelen/nwipe.git
+endif
 
-# This hook copies your patch script (banner patch) into the source directory
-# and runs autogen.sh before the actual configure/make starts.
-define NWIPE_INITSH
-        (cd $(@D) && cp ../../../package/nwipe/002-nwipe-banner-patch.sh $(@D) \
-                && ./002-nwipe-banner-patch.sh \
-                && PATH="../../host/bin:${PATH}" ./autogen.sh);
+################################################################################
+# Architecture safeguard
+################################################################################
+
+define NWIPE_CHECK_ARCH
+	case "$(NWIPE_BUILD_ARCH)" in \
+	i686|x86_64) ;; \
+	*) echo "Unsupported architecture: $(NWIPE_BUILD_ARCH)"; exit 1 ;; \
+	esac
 endef
 
-NWIPE_PRE_CONFIGURE_HOOKS += NWIPE_INITSH
+NWIPE_PRE_CONFIGURE_HOOKS += NWIPE_CHECK_ARCH
 
-# Include the Buildroot autotools package framework,
-# which takes care of configure/make/make install.
+################################################################################
+# SHREDOS version.txt and banner updater. Updates the nwipe version which
+# could be a release version, such as 0.40 or a commit reference, such as
+# e964dba-dev used by developers when working on non released code from the
+# master branch.
+################################################################################
+
+SHREDOS_VERSION_FILE = board/shredos/fsoverlay/etc/shredos/version.txt
+
+# If version contains a dot, treat it as a release tag
+ifneq ($(findstring .,$(NWIPE_VERSION)),)
+NWIPE_VERSION_BANNER = $(NWIPE_VERSION)
+else
+# Otherwise assume it is a development version by hash
+NWIPE_VERSION_BANNER = $(shell printf "%.7s-commit-dev" "$(NWIPE_VERSION)")
+endif
+
+# Normalize x86_64 to x86-64 for version
+NWIPE_VERSION_ARCH = $(if $(filter x86_64,$(NWIPE_BUILD_ARCH)),x86-64,$(NWIPE_BUILD_ARCH))
+
+define NWIPE_UPDATE_VERSION_TXT
+	echo "Updating version.txt: arch=$(NWIPE_VERSION_ARCH) banner=$(NWIPE_VERSION_BANNER)"
+	sed -i "s/\(.*_\)\(x86-64\|i686\)_.*$$/\1$(NWIPE_VERSION_ARCH)_$(NWIPE_VERSION_BANNER)/" \
+		$(SHREDOS_VERSION_FILE)
+	grep -q "$(NWIPE_VERSION_ARCH)_$(NWIPE_VERSION_BANNER)" $(SHREDOS_VERSION_FILE) || \
+		{ echo "ERROR: Failed to update version.txt - unexpected format in file?"; exit 1; }
+endef
+
+NWIPE_PRE_CONFIGURE_HOOKS += NWIPE_UPDATE_VERSION_TXT
+
+################################################################################
+# Version architecture nwipe banner updater (pre-build)
+################################################################################
+
+define NWIPE_INIT_BUILD
+	(cd $(@D) && \
+	cp ../../../package/nwipe/002-nwipe-banner-patch.sh . && \
+	./002-nwipe-banner-patch.sh && \
+	PATH="../../host/bin:${PATH}" ./autogen.sh)
+endef
+
+# Pre-configure hook, as a post-patch hook would not get triggered on a package
+# reconfigure, and possibly also taint the sources directory with the generated
+# autogen files (which should not be there).
+NWIPE_PRE_CONFIGURE_HOOKS += NWIPE_INIT_BUILD
+
 $(eval $(autotools-package))
+

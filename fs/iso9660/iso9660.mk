@@ -44,11 +44,9 @@ ROOTFS_ISO9660_HYBRID_APPEND_PARTITION_TYPE = $(call qstrip,$(BR2_TARGET_ROOTFS_
 
 ifeq ($(BR2_ARCH_IS_64),y)
 ROOTFS_ISO9660_EFI_NAME = bootx64.efi
-ROOTFS_ISO9660_EFI_NOTNAME = bootia32.efi
 ROOTFS_ISO9660_GRUB2_EFI_PREFIX = $(call qstrip,$(GRUB2_PREFIX_x86_64-efi))
 else
 ROOTFS_ISO9660_EFI_NAME = bootia32.efi
-ROOTFS_ISO9660_EFI_NOTNAME = bootx64.efi
 ROOTFS_ISO9660_GRUB2_EFI_PREFIX = $(call qstrip,$(GRUB2_PREFIX_i386-efi))
 endif
 
@@ -96,6 +94,17 @@ ROOTFS_ISO9660_TMP_TARGET_DIR = $(TARGET_DIR)
 endif
 
 ################################################################################
+# Memtest
+################################################################################
+
+define ROOTFS_ISO9660_COPY_MEMTEST_BINARIES
+	$(INSTALL) -D -m 0644 $(BINARIES_DIR)/memtest.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/memtest.efi
+	$(INSTALL) -D -m 0644 $(BINARIES_DIR)/memtest.bin \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/boot/memtest
+endef
+
+################################################################################
 # Reproducible build support
 ################################################################################
 
@@ -140,7 +149,33 @@ ROOTFS_ISO9660_EFI_PARTITION_CONTENT = $(BINARIES_DIR)/efi-part
 ROOTFS_ISO9660_GRUB2_CONFIG_PATH = $(ROOTFS_ISO9660_TMP_TARGET_DIR)/boot/grub/grub.cfg
 ROOTFS_ISO9660_GRUB2_EFI_CONFIG_PATH = $(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/grub.cfg
 
+ifeq ($(BR2_ARCH_IS_64),y)
+# Include also the 32-bit bootloader for 64-bit builds
+define ROOTFS_ISO9660_EFI_OTHER_ARCH
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
+		$(TOPDIR)/board/shredos/bootx64.efi
+	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootia32.efi \
+		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi
+endef
+else
+# Include also the 64-bit bootloader for 32-bit builds
+define ROOTFS_ISO9660_EFI_OTHER_ARCH
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi \
+		$(TOPDIR)/board/shredos/bootia32.efi
+	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootx64.efi \
+		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
+endef
+endif
+
 define ROOTFS_ISO9660_INSTALL_GRUB2_EFI
+	# Install memtest binaries to ISO9660 filesystem
+	$(ROOTFS_ISO9660_COPY_MEMTEST_BINARIES)
+	# Include also the other achitecture bootloader
+	$(ROOTFS_ISO9660_EFI_OTHER_ARCH)
 	# Create file to better find ISO9660 filesystem
 	$(INSTALL) -D -m 0644 /dev/null \
 		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_IDENT_FILE)
@@ -156,9 +191,6 @@ define ROOTFS_ISO9660_INSTALL_GRUB2_EFI
 	$(ROOTFS_ISO9660_FIX_TIME) $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/*
 	$(HOST_DIR)/bin/mcopy -p -m -i $(ROOTFS_ISO9660_EFI_PARTITION_PATH) -s \
 		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/* ::/
-	# Delete the EFI bootloader that is NOT for the platform we're building for
-	$(HOST_DIR)/bin/mdel -i $(ROOTFS_ISO9660_EFI_PARTITION_PATH) \
-		::$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NOTNAME) || true
 	# Overwrite generic EFI configuration with our EFI configuration
 	$(HOST_DIR)/bin/mcopy -n -o -p -m -i $(ROOTFS_ISO9660_EFI_PARTITION_PATH) \
 		$(ROOTFS_ISO9660_GRUB2_EFI_CONFIG_PATH) ::$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/grub.cfg
@@ -247,7 +279,33 @@ define ROOTFS_ISO9660_INSTALL_ISOLINUX_CONFIG
 		$(ROOTFS_ISO9660_ISOLINUX_CONFIG_PATH)
 endef
 
+ifeq ($(BR2_ARCH_IS_64),y)
+# Include also the 32-bit bootloader for 64-bit builds
+define ROOTFS_ISO9660_EFI_OTHER_ARCH
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
+		$(TOPDIR)/board/shredos/bootx64.efi
+	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootia32.efi \
+		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi
+endef
+else
+# Include also the 64-bit bootloader for 32-bit builds
+define ROOTFS_ISO9660_EFI_OTHER_ARCH
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootia32.efi \
+		$(TOPDIR)/board/shredos/bootia32.efi
+	$(INSTALL) -D -m 0644 $(TOPDIR)/board/shredos/bootx64.efi \
+		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
+	$(INSTALL) -D -m 0644 $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi \
+		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/bootx64.efi
+endef
+endif
+
 define ROOTFS_ISO9660_INSTALL_GRUB2_EFI
+	# Install memtest binaries to ISO9660 filesystem
+	$(ROOTFS_ISO9660_COPY_MEMTEST_BINARIES)
+	# Include also the other achitecture bootloader
+	$(ROOTFS_ISO9660_EFI_OTHER_ARCH)
 	# Create file to better find ISO9660 filesystem
 	$(INSTALL) -D -m 0644 /dev/null \
 		$(ROOTFS_ISO9660_TMP_TARGET_DIR)/$(ROOTFS_ISO9660_GRUB2_EFI_IDENT_FILE)
@@ -263,9 +321,6 @@ define ROOTFS_ISO9660_INSTALL_GRUB2_EFI
 	$(ROOTFS_ISO9660_FIX_TIME) $(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/*
 	$(HOST_DIR)/bin/mcopy -p -m -i $(ROOTFS_ISO9660_EFI_PARTITION_PATH) -s \
 		$(ROOTFS_ISO9660_EFI_PARTITION_CONTENT)/* ::/
-	# Delete the EFI bootloader that is NOT for the platform we're building for
-	$(HOST_DIR)/bin/mdel -i $(ROOTFS_ISO9660_EFI_PARTITION_PATH) \
-		::$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/$(ROOTFS_ISO9660_EFI_NOTNAME) || true
 	# Overwrite generic EFI configuration with our EFI configuration
 	$(HOST_DIR)/bin/mcopy -n -o -p -m -i $(ROOTFS_ISO9660_EFI_PARTITION_PATH) \
 		$(ROOTFS_ISO9660_GRUB2_EFI_CONFIG_PATH) ::$(ROOTFS_ISO9660_GRUB2_EFI_PREFIX)/grub.cfg

@@ -6,7 +6,7 @@ set -euo pipefail
 #
 # Arguments:
 #  x64   - Build only x86-64 configurations
-#  x32   - Build only i586 (32-bit) configurations
+#  x32   - Build only i686 (32-bit) configurations
 #  all   - Build all configurations (64-bit first, then 32-bit)
 #
 # Environment Variables:
@@ -29,25 +29,21 @@ VERSION_FILE="board/shredos/fsoverlay/etc/shredos/version.txt"
 # 64-bit configurations to build:
 X64_CONFIGS=(
 	"shredos_defconfig"
-	"shredos_img_defconfig"
-	"shredos_iso_defconfig"
-	"shredos_iso_legacy_defconfig"
-	"shredos_iso_extra_defconfig" # experimental
+	"shredos_lite_defconfig"
+	"shredos_iso_extra_defconfig"
 )
 
 # 32-bit configurations to build:
 X32_CONFIGS=(
-	"shredos_i586_defconfig"
-	"shredos_img_i586_defconfig"
-	"shredos_iso_i586_defconfig"
-	"shredos_iso_legacy_i586_defconfig"
-	"shredos_iso_extra_i586_defconfig" # experimental
+	"shredos_i686_lite_defconfig"
+	"shredos_iso_extra_i686_lite_defconfig"
 )
 
 # Packages always needing rebuild between runs, even for the same architecture.
 # This only applies when QUICK_BUILD is enabled, otherwise rebuilds everything.
 ALWAYS_REBUILD_PKGS=(
-	"grub2"
+	"nwipe" # For specific version/banner patching
+	"grub2" # For specific bootloader generation
 )
 
 ################################################################################
@@ -76,7 +72,7 @@ print_usage() {
 	echo ""
 	echo "Arguments:"
 	echo "  x64   - Build only x86-64 configurations"
-	echo "  x32   - Build only i586 (32-bit) configurations"
+	echo "  x32   - Build only i686 (32-bit) configurations"
 	echo "  all   - Build all configurations (64-bit first, then 32-bit)"
 	echo ""
 	echo "Environment Variables:"
@@ -141,7 +137,7 @@ prompt_version() {
 
 	if [ -z "$NEW_VERSION" ]; then
 		echo
-		echo "x86-64 and i586 will be replaced/switched around during builds (depending on architecture)"
+		echo "x86-64 and i686 will be replaced/switched around during builds (depending on architecture)"
 		read -rp "Enter new version or press ENTER to keep existing [${current_version}]: " NEW_VERSION
 		[ -z "$NEW_VERSION" ] && NEW_VERSION="$current_version"
 	fi
@@ -278,11 +274,13 @@ build_config() {
 
 	# Build  | QuickBuild=1, PreClean=1  | QuickBuild=0, PreClean=1  | QuickBuild=1, PreClean=0  | QuickBuild=0, PreClean=0
 	# -------|---------------------------|---------------------------|---------------------------|---------------------------
-	# x64 #0 | config -> make            | config -> make            | config -> rebuild -> make | config -> rebuild -> make
+	# x64 #0 | clean* -> config -> make  | clean* -> config -> make  | config -> rebuild -> make | config -> rebuild -> make
 	# x64 #1 | config -> rebuild -> make | clean -> config -> make   | config -> rebuild -> make | clean -> config -> make
 	# x64 #2+| config -> rebuild -> make | clean -> config -> make   | config -> rebuild -> make | clean -> config -> make
 	# x32 #0 | clean -> config -> make   | clean -> config -> make   | clean -> config -> make   | clean -> config -> make
 	# x32 #1+| config -> rebuild -> make | clean -> config -> make   | config -> rebuild -> make | clean -> config -> make
+	# -------|---------------------------|---------------------------|---------------------------|---------------------------
+	# *: This clean is ensured in another part of the script before reaching this point.
 
 	if [ "$index" -ne 0 ] && [ "$QUICK_BUILD" -eq 1 ] && [ "$FORCE_CLEAN" -ne 1 ]; then
 		# If it's not the first configuration, and quick-build is enabled,
@@ -415,9 +413,12 @@ build_config_success() {
 		run_cmd mv "$log_file" "dist/${config}-SUCCESS.log"
 	fi
 
+	rename_and_checksum_images "$config"
+
 	run_cmd mkdir -p "dist/$config"
 	run_cmd mv output/images/shredos*.iso "dist/$config/" 2>/dev/null || true
 	run_cmd mv output/images/shredos*.img "dist/$config/" 2>/dev/null || true
+	run_cmd mv output/images/shredos*.sha1 "dist/$config/" 2>/dev/null || true
 
 	printf "%b" "$GREEN"
 	echo
@@ -467,6 +468,79 @@ build_config_failed() {
 		printf "%b" "$RESET"
 		exit 1
 	fi
+}
+
+# Function to handle suffix insertion before the extension
+insert_suffix() {
+    local fname="$1"
+    local suffix="$2"
+    local base="${fname%.*}"
+    local ext="${fname##*.}"
+    echo "${base}${suffix}.${ext}"
+}
+
+rename_and_checksum_images() {
+    local config="$1"
+    target_dir="output/images"
+
+    # If the defconfig contains the string `lite`, i.e a reduced size
+    # so it will boot on systems with only 512MB of RAM then insert
+    # into the .iso or .img filename the string _lite prior to the extension.
+
+    if [[ "$config" == *"lite"* ]]; then
+        shopt -s nullglob
+        for file in "$target_dir"/shredos*.{iso,img}; do
+            filename=$(basename "$file")
+            if [[ "$filename" != *"_lite"* ]]; then
+                new_name=$(insert_suffix "$filename" "_lite")
+                mv -v "$file" "$target_dir/$new_name"
+            fi
+        done
+        shopt -u nullglob
+    else
+        echo "Condition not met: 'lite' not in $config, rename not necessary."
+    fi
+
+    # If the defconfig contains the string `extra`, i.e an extra partition
+    # then insert into the .iso or .img filename the string _plus-partition
+
+    if [[ "$config" == *"extra"* ]]; then
+        shopt -s nullglob
+        for file in "$target_dir"/shredos*.{iso,img}; do
+            filename=$(basename "$file")
+            if [[ "$filename" != *"_plus-partition"* ]]; then
+                new_name=$(insert_suffix "$filename" "_plus-partition")
+                mv -v "$file" "$target_dir/$new_name"
+            fi
+        done
+        shopt -u nullglob
+    else
+        echo "Condition not met: 'extra' not in $config, rename not necessary."
+    fi
+
+    # Clean up orphaned .sha1 files (that don't match any existing image)
+    echo "Cleaning up orphaned .sha1 files..."
+    shopt -s nullglob
+    for sha_file in "$target_dir"/shredos*.sha1; do
+        # Strip .sha1 to find the base image name
+        corresponding_image="${sha_file%.sha1}"
+        if [[ ! -f "$corresponding_image" ]]; then
+            rm -v "$sha_file"
+        fi
+    done
+    shopt -u nullglob
+
+    # Calculate SHA1 for all final files
+    echo "Calculating SHA1 checksums..."
+    current_dir=$(pwd)
+    cd "$target_dir" || exit
+    shopt -s nullglob
+    for file in shredos*.{iso,img}; do
+        sha1sum "$file" > "$file.sha1"
+    done
+    shopt -u nullglob
+    cd "$current_dir" || exit
+    echo "[DONE]"
 }
 
 ################################################################################
@@ -542,7 +616,7 @@ if [ ${#X64_CONFIGS[@]} -gt 0 ]; then
 	echo "Starting 64-bit builds..."
 	echo "==============================================="
 	echo
-	replace_version "i586" "x86-64"
+	replace_version "i686" "x86-64"
 
 	CFG_INDEX=0
 	for config in "${X64_CONFIGS[@]}"; do
@@ -562,7 +636,7 @@ if [ ${#X32_CONFIGS[@]} -gt 0 ]; then
 	echo "Starting 32-bit builds..."
 	echo "==============================================="
 	echo
-	replace_version "x86-64" "i586"
+	replace_version "x86-64" "i686"
 
 	CFG_INDEX=0
 	for config in "${X32_CONFIGS[@]}"; do

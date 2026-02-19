@@ -1,0 +1,18 @@
+#!/bin/sh
+trap "echo" INT
+
+sleep 2
+if [ -x /usr/bin/smartdmt ]; then
+    while true; do
+        /usr/bin/smartdmt
+        echo "Press ENTER to restart SMART Device Monitoring Terminal..."
+        read dummy
+        clear
+    done
+else
+    while true; do
+        echo "SMART Device Monitoring Terminal is not available in this version of ShredOS."
+        read dummy
+        clear
+    done
+fi

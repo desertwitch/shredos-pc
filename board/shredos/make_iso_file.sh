@@ -1,9 +1,9 @@
 #!/bin/bash -e
 
 if grep -Eq "^BR2_ARCH_IS_64=y$" "${BR2_CONFIG}"; then
-    MKIMAGE_ARCH=x86_64
+    MKIMAGE_ARCH=x86-64
 else
-    MKIMAGE_ARCH=i386
+    MKIMAGE_ARCH=i686
 fi
 
 version=$(cat board/shredos/fsoverlay/etc/shredos/version.txt)
