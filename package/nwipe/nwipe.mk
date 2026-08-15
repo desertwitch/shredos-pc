@@ -9,6 +9,7 @@ NWIPE_VERSION = $(call qstrip,$(BR2_PACKAGE_NWIPE_GIT_REVISION))
 NWIPE_DEPENDENCIES = ncurses parted dmidecode coreutils libconfig libnvme
 NWIPE_CONF_OPTS = --with-libnvme
 NWIPE_SITE_METHOD = git
+NWIPE_MAKE_ENV = NWIPE_GIT_HASH=$(NWIPE_VERSION)
 
 ifneq ($(call qstrip,$(BR2_PACKAGE_NWIPE_SITE)),)
 NWIPE_SITE = $(call qstrip,$(BR2_PACKAGE_NWIPE_SITE))
