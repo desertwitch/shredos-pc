@@ -1,25 +1,30 @@
 # shredos-pc
 
-**shredos-pc is a fork of shredos, with patched-in support for pre-clearing disks for Unraid.**
+shredos-pc is a fork of shredos, with added support for:
 
-It also serves as a base for development and contributions to upstream ShredOS itself.
+- Pre-clearing disks for direct use with Unraid OS
+- ATA and NVMe secure erase (hardware-native sanitize)
 
 It utilizes the forked `nwipe-pc` under the hood: https://github.com/desertwitch/nwipe-pc
 
-**For the Unraid-specific releases of this fork, visit the [`Releases`](https://github.com/desertwitch/shredos-pc/releases) section of
+The developer is a regular contributor to upstream shredos, so this fork isn't meant to compete with it - it's a staging ground for upstream patches, while also giving users who need these specific features early access.
+
+<a href="https://github.com/desertwitch/shredos-pc/releases"><img width="250" height="100" alt="Download here" src="https://github.com/user-attachments/assets/e37437b8-97b8-4925-b3b7-1420e7432659" /></a>
+
+**For the releases of this fork, visit the [`Releases`](https://github.com/desertwitch/shredos-pc/releases) section of
 this repository** (which can be found to the right or in the tabs menu bar above).
 IMG files can be flashed to USB, and ISO files both to USB and CD/DVD-ROM. IMG
 files should be used when wanting to customize ShredOS (`autonuke` setups,
 specific kernel parameters, ...) or otherwise needing the PDF reports generated
 by ShredOS.
 
-<a href="https://github.com/desertwitch/shredos-pc/releases"><img width="250" height="100" alt="Download here" src="https://github.com/user-attachments/assets/e37437b8-97b8-4925-b3b7-1420e7432659" /></a>
+> [!NOTE]
+> This fork is not intended for distribution packaging or general public use.  
+> Please use upstream instead unless you specifically require the above features.
 
-Beware that below README may be behind/ahead of the upstream ShredOS project,
-and while contained information will be relevant for this fork, all contained
-links will point only to the upstream ShredOS project.
-
-**You should use upstream ShredOS unless depending on Unraid-specific features.**
+> [!WARNING]
+> The text below this warning is copied verbatim from the upstream manual.  
+> Any badges, links and guides point to the upstream project, not this fork of shredos.
 
 # ShredOS - Disk Eraser
 
