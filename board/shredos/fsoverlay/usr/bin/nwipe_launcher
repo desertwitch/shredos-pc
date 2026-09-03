@@ -922,7 +922,7 @@ do
                     Final_message_plus=0
                 fi
 		printf ">"
-		read -rsn1 input
+		IFS= read -rsn1 input
 		printf "\n"
 		case $input in
 			R)
@@ -947,7 +947,7 @@ do
                         fi
                         ;;
 
-			'')
+			" ")
 			printf "Restart Nwipe\n"
 			exitloop="0"
 			;;
