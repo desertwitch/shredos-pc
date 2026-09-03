@@ -909,7 +909,7 @@ do
                 # drive. Note once PDF files/logs have been sent to USB or network server they are moved from '/' to '/sent/'
                 # hence why we only search '/' for pdfs.
                 #
-                grep -i "Model" /*.pdf 2>/dev/null
+                grep -qi "Model" /*.pdf 2>/dev/null
                 if [ $? == 0 ]
 		then
                     printf ">> WARNING << There are PDF's that have not been saved, plug in a USB drive\n"
