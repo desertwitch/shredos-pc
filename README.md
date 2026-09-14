@@ -313,7 +313,7 @@ Create the new ShredOS .img file.
 ```
 >sudo dd if=/dev/loop30 of=shredos_with_mods.img
 ```
-Copy shredos_with_mods.img to the root of the Ventoy USB stick and boot the Ventoy USB stick. You can confirm your changes to the kernel commmand line by booting ShredOS, switching to a virtual terminal ALT-F2, and type `more /proc/cmdline`
+Copy shredos_with_mods.img to the root of the Ventoy USB stick and boot the Ventoy USB stick. You can confirm your changes to the kernel command line by booting ShredOS, switching to a virtual terminal ALT-F2, and type `more /proc/cmdline`
 
 ## Virtual Terminals
 ShredOS has four TTY terminals, ALT-F1 (Where nwipe is initially launched), ALT-F2 (A virtual terminal), ALT-F3 (console log, login required which is root with no password), ALT-F4 ([SMART Monitoring Terminal](#smartdmt)). Typical use of a virtual terminal might be to run other disk related tools such as hdparm to remove hidden sectors or hexedit to display the contents of the disk as hexadecimal values.
@@ -321,7 +321,7 @@ ShredOS has four TTY terminals, ALT-F1 (Where nwipe is initially launched), ALT-
 ## How to exclude the FAT formatted ShredOS Boot drive from Nwipe, interactive and autonuke modes
 There are two methods that can be used to exclude the FAT formatted ShredOS boot drive from appearing in nwipe's interactive mode or autonuke modes.
 
-- **Method 1:** The first method is to place the following string `shredos_exclude_boot_disc="yes"` on the kernel command line in /boot/grub/grub.cfg and EFI/BOOT/grub.cfg on the ShredOS boot drive. This method obviously requires access to the grub.cfg file so is particularily suitable if you are creating your ShredOS boot drive using dd, Rufus or a similiar program however it's not possible to use this method if you are copying the .iso or .img file to a Ventoy USB drive as you would need to either unpack, edit the grub.cfg files and repack the .img or build the .iso or .img from source after editing the grub.cfg in the source. So for Ventoy users who want to exclude the FAT formatted ShredOS boot drive you should consider method 2 below.
+- **Method 1:** The first method is to place the following string `shredos_exclude_boot_disc="yes"` on the kernel command line in /boot/grub/grub.cfg and EFI/BOOT/grub.cfg on the ShredOS boot drive. This method obviously requires access to the grub.cfg file so is particularly suitable if you are creating your ShredOS boot drive using dd, Rufus or a similar program however it's not possible to use this method if you are copying the .iso or .img file to a Ventoy USB drive as you would need to either unpack, edit the grub.cfg files and repack the .img or build the .iso or .img from source after editing the grub.cfg in the source. So for Ventoy users who want to exclude the FAT formatted ShredOS boot drive you should consider method 2 below.
 ```
 set default="0"
 set timeout="0"
@@ -333,7 +333,7 @@ menuentry "shredos" {
 **WARNING** 
 You should not place the string `/etc/shredos/shredos_exclude_disc` on multiple FAT formatted drives or for that matter any drive irrespective of formatting, expecting all the drives with this string to not appear in nwipe or not get wiped in interactive mode. The file `/etc/shredos/shredos_exclude_disc` should only appear on the one and only ShredOS boot drive on the system. Any other drives that contain `/etc/shredos/shredos_exclude_disc` will appear in nwipe and WILL get wiped in autonuke mode.
 
-## Informations for Intel powered Apple Devices
+## Information for Intel powered Apple Devices
 Yes, ShredOS will boot on **Intel** powered Macs, however here's a few tips you may find useful.
 
 - Booting from USB. Power off then power on holding down the `alt` key. After a few seconds select EFI boot.
@@ -369,7 +369,7 @@ menuentry "shredos" {
 ```
 
 ## How to run nwipe so you can specify nwipe command line options
-The version of nwipe that runs in the default terminal will automatically restart when you exit it, either at the end of a wipe or using CONTROL-C to abort. So if you want to run nwipe in the traditional way, along with any command line options you require, then use the second terminal ALT-F2, as an example, you could then use the command ```nwipe --nousb --logfile=nwipe.log``` etc. If you do use ALT-F2 to run a second copy of nwipe, please remember that if you already have one copy of nwipe wiping, the second copy of nwipe will hang on starting. Therefore nwipe in the default terminal should be left at the drive selection screen to prevent the second occurence of nwipe from hanging. Alternatively, a second occurrence of nwipe could be started by specifying the drive on the command line as long as that drive is not already being wiped by the first instance of nwipe, i.e.```nwipe /dev/sdc``` etc.
+The version of nwipe that runs in the default terminal will automatically restart when you exit it, either at the end of a wipe or using CONTROL-C to abort. So if you want to run nwipe in the traditional way, along with any command line options you require, then use the second terminal ALT-F2, as an example, you could then use the command ```nwipe --nousb --logfile=nwipe.log``` etc. If you do use ALT-F2 to run a second copy of nwipe, please remember that if you already have one copy of nwipe wiping, the second copy of nwipe will hang on starting. Therefore nwipe in the default terminal should be left at the drive selection screen to prevent the second occurrence of nwipe from hanging. Alternatively, a second occurrence of nwipe could be started by specifying the drive on the command line as long as that drive is not already being wiped by the first instance of nwipe, i.e.```nwipe /dev/sdc``` etc.
 
 ## How to change the default nwipe options so the change persists between reboots
 To change the default settings of nwipe you will need to place the nwipe options required on the kernel command line in /boot/grub/grub.cfg and /EFI/BOOT/grub.cfg
@@ -565,7 +565,7 @@ cp /nwipe_log* /store/
 cd /;umount store
 ```
 ### Transferring nwipe log files to a FTP server using lftp
-ShredOS uses the lftp application to transfer files to a remote server. To enable the automatic transfer of nwipe log files, you will need to edit both grub.cfg files (/boot/grub/grub.cfg and /EFI/BOOT/grub.cfg) on the ShredOS USB memory stick. In much the same way you you specify loadkeys or nwipe options which are described above, you edit the linux kernal command line and add the following lftp="open 192.168.1.60; user your-username your-password; cd data; mput nwipe_*.txt", changing the IP, username and password as required. As FTP does not encrypt data you should really only use it to transfer data on your local area network and not over the internet. SFTP may be implemented at a future date if users request that feature. You can also manually use lftp on the command line (ALT-F2 or ALT-F3) if you prefer. I use this feature with a chrooted vsftpd FTP server on a Linux PC. The automatic transfer of nwipe log files will be initiated on completion of all wipes and after pressing any key in nwipe to exit. The lftp status will be shown after the nwipe summary table.
+ShredOS uses the lftp application to transfer files to a remote server. To enable the automatic transfer of nwipe log files, you will need to edit both grub.cfg files (/boot/grub/grub.cfg and /EFI/BOOT/grub.cfg) on the ShredOS USB memory stick. In much the same way you you specify loadkeys or nwipe options which are described above, you edit the linux kernel command line and add the following lftp="open 192.168.1.60; user your-username your-password; cd data; mput nwipe_*.txt", changing the IP, username and password as required. As FTP does not encrypt data you should really only use it to transfer data on your local area network and not over the internet. SFTP may be implemented at a future date if users request that feature. You can also manually use lftp on the command line (ALT-F2 or ALT-F3) if you prefer. I use this feature with a chrooted vsftpd FTP server on a Linux PC. The automatic transfer of nwipe log files will be initiated on completion of all wipes and after pressing any key in nwipe to exit. The lftp status will be shown after the nwipe summary table.
 		
 **IMPORTANT**
 - I would recommend you setup a new user account on the system that hosts your FTP server and only use that new user's account, username and password with ShredOS. You don't want to use your own personal user account details as you will be placing those details on the ShredOS USB storage device in a plain text format.
@@ -942,8 +942,8 @@ $ dd if=shredos-20200412.img of=/dev/sdx (20200412 will be the day you compiled,
 
 #### The following experimental configurations are available for testing:
 
-- `make shredos_iso_extra_defconfig` - build hybrid ISO with appended writeable partition (64-bit)
-- `make shredos_iso_extra_i686_lite_defconfig` - build lighter hybrid ISO with appended writeable partition (32-bit)
+- `make shredos_iso_extra_defconfig` - build hybrid ISO with appended writable partition (64-bit)
+- `make shredos_iso_extra_i686_lite_defconfig` - build lighter hybrid ISO with appended writable partition (32-bit)
 
 Do note that loading a configuration should typically be the last step before `make`.
 
@@ -952,9 +952,9 @@ Do note that loading a configuration should typically be the last step before `m
 >- are BIOS and UEFI bootable
 >- can both be written to CD/DVD-ROM and USB flash drives
 >- use ISOLINUX in BIOS for better compliance with very old systems
->- **but** do not have a writeable partition for PDFs/configurations
+>- **but** do not have a writable partition for PDFs/configurations
 >
-> Some tools such as Rufus offer an "ISO-Mode", which enable such a writeable
+> Some tools such as Rufus offer an "ISO-Mode", which enable such a writable
 > partition at burn-time, which then also allows customization of the GRUB
 > configuration.
 >
@@ -977,7 +977,7 @@ project root. If you invoke it with no arguments, it will show a usage manual
 and allow you to build multiple configuration targets with more ease.
 
 ### Issues that you may get when building ShredOS
-- **Error: "Internal Size Too Big"** If you are compiling the vanilla version of ShredOS and have made no alterations or additions but it fails to build the .img with the error "Internal error: size too big" then you may have a version of mtools that has a version of mcopy which has a bug whenever the -b option is used. This bug is known to exist in mcopy version 4.0.32 and maybe others but is fixed in v4.0.42. The solution is to upgrade your copy of mtools to a later version. However, if you have altered ShredOS by adding more packages you may need to update the size of the FAT32 partition. You can do this by increasing the 'size' in ../board/shredos/genimage.cfg. Depending on how much extra software you have added increase the size by 10MB or more. Currently as of March 2023 the current size is `size = 130000000`, this is in bytes, so adding 10MB will mean you need to edit this value so that it reads `size = 140000000`. After the edit, just run `make` which will result in a quicker build. You don't need to run `make clean` first as that would result in a full rebuild which is not neccessary when all you are doing is increasing the final image size. If your repository does not supply a later version of mtools, then you can obtain mtools packages for various distros from [here](https://www.gnu.org/software/mtools/#downloads)
+- **Error: "Internal Size Too Big"** If you are compiling the vanilla version of ShredOS and have made no alterations or additions but it fails to build the .img with the error "Internal error: size too big" then you may have a version of mtools that has a version of mcopy which has a bug whenever the -b option is used. This bug is known to exist in mcopy version 4.0.32 and maybe others but is fixed in v4.0.42. The solution is to upgrade your copy of mtools to a later version. However, if you have altered ShredOS by adding more packages you may need to update the size of the FAT32 partition. You can do this by increasing the 'size' in ../board/shredos/genimage.cfg. Depending on how much extra software you have added increase the size by 10MB or more. Currently as of March 2023 the current size is `size = 130000000`, this is in bytes, so adding 10MB will mean you need to edit this value so that it reads `size = 140000000`. After the edit, just run `make` which will result in a quicker build. You don't need to run `make clean` first as that would result in a full rebuild which is not necessary when all you are doing is increasing the final image size. If your repository does not supply a later version of mtools, then you can obtain mtools packages for various distros from [here](https://www.gnu.org/software/mtools/#downloads)
 
 >INFO: vfat(boot.vfat): cmd: "MTOOLS_SKIP_CHECK=1 mcopy -bsp -i '/home/shredos/Downloads/shredos/mcopybug/shredos.x86_64/output/images/boot.vfat' '/home/shredos/Downloads/shredos/mcopybug/shredos.x86_64/output/images/grub.cfg' '::boot/grub/grub.cfg'" (stderr):
 ***Internal error, size too big***
@@ -1053,7 +1053,7 @@ S40network is responsible for starting the network & obtaining a IP address via 
 nwipe_launcher starts the nwipe program in TTY1, see ../board/shredos/fsoverlay/etc/inittab which is where nwipe_launcher is called from. The nwipe_launcher script, apart from starting nwipe in TTY1 also is responsible for calling the lftp program to automatically transfer log files to a remote FTP server on your local area network, assuming lftp has been enabled on the kernel command line. It also contains the 4,3,2,1 countdown and nwipe restart code.
 		
 #### ../package/nwipe/
-All programs in ShredOS appear under their individual sub-directory under the package directory, therefore, you will find all the information relating to the build of nwipe under ../package/nwipe. The four files contained here are involved in downloading the nwipe source from https://github.com/PartialVolume/nwipe, checking the integrity of the source by comparison of the hash, patching the nwipe version.c and compiling the code. Each file in ../package/nwipe/ is descibed below.
+All programs in ShredOS appear under their individual sub-directory under the package directory, therefore, you will find all the information relating to the build of nwipe under ../package/nwipe. The four files contained here are involved in downloading the nwipe source from https://github.com/PartialVolume/nwipe, checking the integrity of the source by comparison of the hash, patching the nwipe version.c and compiling the code. Each file in ../package/nwipe/ is described below.
 		
 #### ../package/nwipe/nwipe.mk
 This is the buildroot make file for nwipe. This is where the nwipe source download is initiated & hash checked. It also patches the nwipe code, in the case of ShredOS the only patching to the vanilla nwipe code is to change the nwipe title bar from nwipe [version] to ShredOS [shredos version] i.e ShredOS 2021.08.2_22_x86-64_0.32.023. This file also includes nwipe dependencies and nwipe version number. Therefore is file should have the nwipe version number updated if a new version of nwipe is incorporated into ShredOS.
